@@ -12,7 +12,6 @@ page 50100 "AI Customer Ledger Entries"
     ModifyAllowed = false;
     DeleteAllowed = false;
 
-
     layout
     {
         area(content)
@@ -30,11 +29,32 @@ page 50100 "AI Customer Ledger Entries"
                 field(remainingAmount; Rec."Remaining Amount") { }
                 field(currencyCode; Rec."Currency Code") { }
                 field(appliesToId; Rec."Applies-to ID") { }
-
-              
+                field(description; Rec.Description) { }
+                field(daysOverdue; GetCustDaysOverdue(Rec)) { }
+                field(isOverdue; CustIsOverdue(Rec)) { }
+                field(percentageOfOriginal; GetCustPercentageRemaining(Rec)) { }
             }
         }
     }
 
-    
+    local procedure GetCustDaysOverdue(var CustLedger: Record "Cust. Ledger Entry"): Integer
+    begin
+        if CustLedger.Open and (CustLedger."Due Date" < WorkDate()) then
+            exit(WorkDate() - CustLedger."Due Date")
+        else
+            exit(0);
+    end;
+
+    local procedure CustIsOverdue(var CustLedger: Record "Cust. Ledger Entry"): Boolean
+    begin
+        exit(CustLedger.Open and (CustLedger."Due Date" < WorkDate()));
+    end;
+
+    local procedure GetCustPercentageRemaining(var CustLedger: Record "Cust. Ledger Entry"): Decimal
+    begin
+        if CustLedger."Original Amount" <> 0 then
+            exit((CustLedger."Remaining Amount" / CustLedger."Original Amount") * 100)
+        else
+            exit(0);
+    end;
 }
